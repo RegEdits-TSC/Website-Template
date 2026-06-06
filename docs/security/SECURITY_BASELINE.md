@@ -22,6 +22,12 @@ GitHub UI (these cannot be committed as files).
 
 ## Enable in GitHub settings (one time)
 
+> **Plan note:** On a **private repo with a Free plan**, secret scanning +
+> push protection and branch protection / rulesets are unavailable. Either
+> upgrade to **GitHub Pro** or make the repo **public** to enable them. The
+> CLI already enabled what Free allows: Dependabot alerts (on), Dependabot
+> security updates (off), auto-merge, delete-branch-on-merge, wiki/projects off.
+
 ### Settings -> Code security
 
 - [ ] **Dependency graph** - on

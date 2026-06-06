@@ -13,6 +13,9 @@ permissions:
 jobs:
   analysis:
     name: Scorecard analysis
+    # Scorecard publishes to the public OpenSSF API and most checks assume a
+    # public repo. Stays dormant while private; activates if made public.
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     permissions:
       security-events: write # upload SARIF to code scanning
