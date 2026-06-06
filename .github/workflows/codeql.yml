@@ -43,6 +43,9 @@ jobs:
   # Runs immediately - no application code required.
   analyze-actions:
     name: Analyze (actions)
+    # Code scanning (SARIF upload) needs GitHub Advanced Security on private
+    # repos. Dormant while private+Free; activates when public or on Pro/GHAS.
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     permissions:
       security-events: write
@@ -70,7 +73,7 @@ jobs:
   analyze-go:
     name: Analyze (go)
     needs: detect
-    if: needs.detect.outputs.has_go == 'true'
+    if: github.event.repository.visibility == 'public' && needs.detect.outputs.has_go == 'true'
     runs-on: ubuntu-latest
     permissions:
       security-events: write

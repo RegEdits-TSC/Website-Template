@@ -10,6 +10,9 @@ permissions:
 jobs:
   review:
     name: Dependency Review
+    # The dependency-review API needs GitHub Advanced Security on private repos.
+    # Dormant while private+Free; activates when public or on Pro/GHAS.
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     permissions:
       contents: read

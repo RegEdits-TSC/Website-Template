@@ -22,11 +22,24 @@ GitHub UI (these cannot be committed as files).
 
 ## Enable in GitHub settings (one time)
 
-> **Plan note:** On a **private repo with a Free plan**, secret scanning +
-> push protection and branch protection / rulesets are unavailable. Either
-> upgrade to **GitHub Pro** or make the repo **public** to enable them. The
-> CLI already enabled what Free allows: Dependabot alerts (on), Dependabot
-> security updates (off), auto-merge, delete-branch-on-merge, wiki/projects off.
+> **Plan note (private repo on Free):** several controls need **GitHub
+> Advanced Security** (Pro/Team/Enterprise) or a **public** repo, and stay
+> dormant until then:
+>
+> - **CodeQL code scanning** — the `codeql.yml` analyze jobs are gated to
+>   public visibility (SARIF upload needs GHAS on private repos).
+> - **Dependency Review** — `dependency-review.yml` is gated the same way.
+> - **OpenSSF Scorecard** — `scorecard.yml` is gated to public (it publishes
+>   to the public OpenSSF API).
+> - **Secret scanning + push protection** — unavailable on Free/private.
+> - **Branch protection / rulesets** — unavailable on Free/private, so required
+>   status checks cannot be enforced yet.
+>
+> What still runs on private+Free: **gitleaks** (Secret Scan workflow),
+> **govulncheck**, **golangci-lint/gosec**, **go test** (the last three once Go
+> code lands). To unlock everything else, make the repo **public** or upgrade
+> to **GitHub Pro**. Already enabled via CLI: Dependabot alerts (on), Dependabot
+> security updates (off), delete-branch-on-merge, wiki/projects off.
 
 ### Settings -> Code security
 
