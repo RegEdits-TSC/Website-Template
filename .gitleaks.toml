@@ -1,0 +1,16 @@
+# gitleaks configuration. Extends the bundled default ruleset and adds a small
+# allowlist for files that legitimately contain high-entropy, non-secret data.
+title = "Dino-Bot-Website gitleaks config"
+
+[extend]
+useDefault = true
+
+# Only machine-generated, legitimately high-entropy files are exempt. Do NOT
+# add the docs tree here - secret detection must stay active everywhere prose
+# could accidentally contain a real value.
+[allowlist]
+description = "Global allowlist"
+paths = [
+  '''go\.sum$''',
+  '''(.*?)\.lock$''',
+]

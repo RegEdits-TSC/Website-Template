@@ -1,0 +1,15 @@
+# Code ownership. Every PR requires review from an owner before merge.
+# Enforced by enabling "Require review from Code Owners" in branch protection.
+
+# Default owner for everything in the repo.
+*                       @RegEdits-TSC
+
+# Security-sensitive surfaces get explicit ownership so changes are never missed.
+/.github/               @RegEdits-TSC
+/.github/workflows/     @RegEdits-TSC
+/docs/security/         @RegEdits-TSC
+/SECURITY.md            @RegEdits-TSC
+/renovate.json          @RegEdits-TSC
+/Dockerfile             @RegEdits-TSC
+/.golangci.yml          @RegEdits-TSC
+/.gitleaks.toml         @RegEdits-TSC

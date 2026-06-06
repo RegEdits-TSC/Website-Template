@@ -1,0 +1,44 @@
+# golangci-lint v2 configuration. Security-focused: gosec on, plus the linters
+# that catch the bug classes this stack is most exposed to (unchecked errors,
+# leaked resources, missing context, SQL rows not closed).
+version: "2"
+
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  default: standard
+  enable:
+    - gosec # security analyzer (G-rules)
+    - bodyclose # response bodies must be closed
+    - sqlclosecheck # sql.Rows / sql.Stmt must be closed
+    - rowserrcheck # check sql.Rows.Err
+    - noctx # no HTTP requests without context.Context
+    - contextcheck # context is propagated correctly
+    - errorlint # correct error wrapping / comparison
+    - nilerr # do not return nil after checking err != nil
+    - copyloopvar # loop-variable capture bugs
+    - gocritic
+    - misspell
+    - revive
+    - unconvert
+    - prealloc
+  settings:
+    gosec:
+      severity: low
+      confidence: low
+    govet:
+      enable-all: true
+  exclusions:
+    rules:
+      # Test files may use weaker constructs intentionally.
+      - path: _test\.go
+        linters:
+          - gosec
+          - noctx
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

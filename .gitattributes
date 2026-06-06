@@ -1,0 +1,10 @@
+# Normalize line endings; keep shell scripts LF on every platform.
+* text=auto eol=lf
+*.go text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff2 binary

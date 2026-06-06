@@ -1,0 +1,83 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":pinDevDependencies",
+    ":enablePreCommit",
+    "helpers:pinGitHubActionDigestsToSemver",
+    "security:openssf-scorecard"
+  ],
+  "timezone": "America/New_York",
+  "schedule": ["* 0-6 * * 1"],
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 0,
+  "rangeStrategy": "bump",
+  "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
+  "lockFileMaintenance": { "enabled": true, "schedule": ["* 0-6 * * 1"] },
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "schedule": ["at any time"]
+  },
+  "osvVulnerabilityAlerts": true,
+  "packageRules": [
+    {
+      "description": "Pin every GitHub Action to a full commit SHA, keep the version comment.",
+      "matchDepTypes": ["action"],
+      "pinDigests": true
+    },
+    {
+      "description": "Pin container base images to immutable digests and keep them current.",
+      "matchManagers": ["dockerfile"],
+      "pinDigests": true
+    },
+    {
+      "description": "Auto-merge safe Action and Docker base-image updates once CI passes.",
+      "matchManagers": ["github-actions", "dockerfile"],
+      "matchUpdateTypes": ["digest", "pin", "patch", "minor"],
+      "automerge": true,
+      "automergeStrategy": "squash",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Group non-major Go module updates into one PR.",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "go modules (non-major)"
+    },
+    {
+      "description": "Keep the Go toolchain on the latest stable release.",
+      "matchManagers": ["gomod"],
+      "matchDepNames": ["go"],
+      "rangeStrategy": "bump"
+    },
+    {
+      "description": "Security-critical libraries: never auto-merge, always human review.",
+      "matchPackageNames": [
+        "github.com/go-webauthn/webauthn",
+        "github.com/jackc/pgx/**",
+        "golang.org/x/crypto"
+      ],
+      "automerge": false,
+      "labels": ["security", "review-required"]
+    },
+    {
+      "description": "Majors are always reviewed by a human.",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "major-update"]
+    }
+  ],
+  "customManagers": [
+    {
+      "description": "Track tool versions pinned in Makefile and ci.yml via `# renovate:` annotations.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^Makefile$/", "/^\\.github/workflows/ci\\.yml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\S.*?(?<currentValue>v\\d+\\.\\d+\\.\\d+)"
+      ]
+    }
+  ]
+}

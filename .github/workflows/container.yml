@@ -1,0 +1,113 @@
+name: Container Image
+
+# Supply-chain pipeline for the production container image. The image is pushed
+# BY DIGEST first (not addressable by the release tag), then scanned, SBOM'd,
+# signed, and attested against that exact immutable digest. The human-readable
+# release tag is applied only after every gate passes - so a vulnerable or
+# unsigned image is never pullable by its release tag.
+# Dormant until a Dockerfile target (./cmd/server) and a release tag exist.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: container-${{ github.ref }}
+  cancel-in-progress: false # never cancel a release build mid-sign
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  build:
+    name: Build, scan, sign, promote
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # push to GHCR
+      id-token: write # cosign keyless signing + provenance
+      attestations: write # actions/attest-build-provenance
+      security-events: write # upload Trivy SARIF
+    steps:
+      - name: Harden runner
+        # Promote to `egress-policy: block` with an explicit allowed-endpoints
+        # list once a first audit run captures the steady-state egress set
+        # (ghcr.io, Sigstore fulcio/rekor/tuf, GitHub OIDC + attestations API,
+        # proxy.golang.org, the Trivy DB source). Audit is the bootstrap posture,
+        # not the permanent one for this privileged release pipeline.
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+      - name: Log in to GHCR
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        with:
+          context: .
+          # Push by digest only - the release tag is NOT created here. Nothing is
+          # pullable by ${IMAGE}:<tag> until the promote step at the end.
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          provenance: false # attested separately below
+          sbom: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Trivy scan (by digest, fail closed)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
+          format: sarif
+          output: trivy.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1" # a vulnerable image is never signed or promoted
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@c35d1b164463ee62a100735382aaaa525c5d3496 # codeql-bundle-v2.25.6
+        with:
+          sarif_file: trivy.sarif
+      - name: Generate SBOM (by digest)
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          image: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Sign image (keyless)
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: cosign sign --yes "${IMAGE}@${DIGEST}"
+      - name: Attest SBOM to the registry
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: cosign attest --yes --predicate sbom.spdx.json --type spdxjson "${IMAGE}@${DIGEST}"
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+      - name: Promote digest to release tag
+        # Reached only if scan, sign, and attestation all succeeded. This is the
+        # first moment the image is addressable by its release tag.
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          docker buildx imagetools create \
+            --tag "${IMAGE}:${GITHUB_REF_NAME}" \
+            "${IMAGE}@${DIGEST}"

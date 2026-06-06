@@ -1,0 +1,13 @@
+.git
+.github
+docs
+*.md
+.golangci.yml
+.gitleaks.toml
+.pre-commit-config.yaml
+.editorconfig
+Makefile
+renovate.json
+*_test.go
+.env
+.env.*
