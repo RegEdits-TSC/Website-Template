@@ -1,6 +1,6 @@
 # gitleaks configuration. Extends the bundled default ruleset and adds a small
 # allowlist for files that legitimately contain high-entropy, non-secret data.
-title = "Dino-Bot-Website gitleaks config"
+title = "Website-Template gitleaks config"
 
 [extend]
 useDefault = true

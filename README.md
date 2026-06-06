@@ -1,8 +1,9 @@
-# Dino-Bot-Website
+# Website Template
 
-A secure-by-default foundation for a Go web application. This repository ships
-the security tooling, CI/CD, and supply-chain controls first; application code
-is added on top of an already-hardened baseline.
+A secure-by-default **template repository** for a Go web application. Click
+**Use this template** to start a new project on an already-hardened baseline:
+the security tooling, CI/CD, and supply-chain controls ship first; application
+code is added on top.
 
 ## Stack
 

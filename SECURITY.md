@@ -16,7 +16,7 @@ This project tracks the latest stable release of every component. Only the
 **Do not open a public issue for security problems.**
 
 Report privately via a GitHub Security Advisory:
-<https://github.com/RegEdits-TSC/Dino-Bot-Website/security/advisories/new>
+<https://github.com/RegEdits-TSC/Website-Template/security/advisories/new>
 
 Please include:
 

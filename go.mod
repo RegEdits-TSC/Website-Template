@@ -1,4 +1,4 @@
-module github.com/RegEdits-TSC/Dino-Bot-Website
+module github.com/RegEdits-TSC/Website-Template
 
 go 1.26.4
 
