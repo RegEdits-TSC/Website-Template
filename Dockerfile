@@ -25,7 +25,7 @@ RUN go build -ldflags="-s -w -buildid=" -o /out/server ./cmd/server
 # ---- runtime stage ----
 # distroless static: no shell, no package manager, no libc - minimal attack
 # surface and effectively zero OS-level CVEs. Runs as the built-in nonroot user.
-FROM gcr.io/distroless/static-debian12:nonroot@sha256:d093aa3e30dbadd3efe1310db061a14da60299baff8450a17fe0ccc514a16639
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab
 COPY --from=build /out/server /server
 USER nonroot:nonroot
 EXPOSE 8080
